@@ -11,7 +11,7 @@ fs.mkdirSync(DB_DIR, { recursive: true });
 const db = new sqlite3.Database(path.join(DB_DIR, 'campuslock.db'));
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 const run = (sql, params=[]) => new Promise((resolve,reject)=>db.run(sql,params,function(err){
   if(err) reject(err); else resolve({id:this.lastID, changes:this.changes});
@@ -153,6 +153,6 @@ app.delete('/api/admin/lockers/:id', async (req,res)=>{
   catch(e){res.status(500).json({error:'Could not delete locker'});}
 });
 
-app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'index.html')));
 
 init().then(()=>app.listen(PORT,()=>console.log(`CampusLock running on port ${PORT}`))).catch(err=>{console.error(err);process.exit(1);});
