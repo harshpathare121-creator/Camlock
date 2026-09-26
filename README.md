@@ -1,28 +1,26 @@
-# CampusLock — SQLite3 + Node.js + Express
+# CampusLock Full Web App
 
-College Locker Management System.
+Root-level Node.js + Express + PostgreSQL project.
 
-## Stack
-- HTML/CSS/JavaScript frontend
-- Node.js + Express backend
-- SQLite3 database (`data/campuslock.db`)
-- GitHub + Render deployment ready
+## Files
+- `index.html` — UI
+- `style.css` — styling
+- `script.js` — frontend API interaction
+- `server.js` — Express API + PostgreSQL schema setup
+- `package.json` — dependencies/start command
+- `.env.example` — environment variables
 
 ## Run locally
-1. Install Node.js 18+.
-2. Open a terminal in this folder.
-3. Run `npm install`
-4. Run `npm start`
-5. Open `http://localhost:3000`
+1. Create a PostgreSQL database.
+2. Copy `.env.example` to `.env` and fill in `DATABASE_URL` and `JWT_SECRET`.
+3. Run `npm install`.
+4. Run `npm start`.
+5. Open the app at `http://localhost:3000`.
 
-## Demo admin
-- Username: `admin`
-- Password: `admin123`
+Default demo admin values are `admin` / `admin123` only if `ADMIN_ID` and `ADMIN_PASSWORD` are not changed. Change them before deployment.
 
-## Database
-The server automatically creates `data/campuslock.db`, tables, demo lockers, and the admin account on first run.
-
-## Render
-- Build Command: `npm install`
-- Start Command: `npm start`
-- Add persistent disk/storage for `data/` if using SQLite in production. Without persistent storage, a platform restart/redeploy can reset the database file.
+## Main flows
+- Student registration → student login
+- Travel group creation → passenger join request → driver approve/reject
+- College resource request → admin approve/reject → student status
+- Locker priority and booking with required number of days
