@@ -21,10 +21,24 @@ $('showLogin').onclick=showLogin;$('showRegister').onclick=showRegister;$('showA
 $('registerForm').onsubmit=async e=>{e.preventDefault();try{await api('/api/auth/register',{method:'POST',body:JSON.stringify({name:$('regName').value,studentId:$('regId').value,locality:$('regLocality').value,distanceKm:$('regDistance').value,password:$('regPassword').value})});$('loginId').value=$('regId').value;toast('Registration successful. Now login.');e.target.reset();showLogin()}catch(err){toast(err.message)}};
 $('loginForm').onsubmit=async e=>{e.preventDefault();try{const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({studentId:$('loginId').value,password:$('loginPassword').value})});token=d.token;me=d.student;role='student';saveSession();openApp();toast(`Welcome, ${me.name}!`)}catch(err){toast(err.message)}};
 function saveSession(){localStorage.setItem('campuslockToken',token);localStorage.setItem('campuslockMe',JSON.stringify(me));localStorage.setItem('campuslockRole',role)}function clearSession(){token=null;me=null;role='student';localStorage.removeItem('campuslockToken');localStorage.removeItem('campuslockMe');localStorage.removeItem('campuslockRole')}
-function openApp(){$('auth').hidden=true;$('app').hidden=false;$('userName').textContent=me?.name||'College Admin';$('adminNav').hidden=role!=='admin';page('home')}function logout(){clearSession();$('app').hidden=true;$('auth').hidden=false;showLogin();$('loginForm').reset()}$('logout').onclick=logout;
+function openApp(){
+  $('auth').hidden=true;
+  $('app').hidden=false;
+  $('userName').textContent=me?.name||'College Admin';
+  $('adminNav').hidden=role!=='admin';
+  const requested=location.hash.slice(1);
+  const allowed=role==='admin' ? ['admin'] : ['home','travel','resources','locker'];
+  page(allowed.includes(requested)?requested:(role==='admin'?'admin':'home'));
+}function logout(){clearSession();$('app').hidden=true;$('auth').hidden=false;showLogin();$('loginForm').reset()}$('logout').onclick=logout;
 $('menu').onclick=()=>{$('side').classList.add('open');$('shade').classList.add('show')};$('close').onclick=$('shade').onclick=()=>{$('side').classList.remove('open');$('shade').classList.remove('show')};document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>page(b.dataset.page));
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>page(b.dataset.go));
-window.onpopstate=()=>{const id=location.hash.slice(1);if(id&&$(id))page(id)};
+window.onpopstate=()=>{
+  if(!$('app').hidden){
+    const id=location.hash.slice(1);
+    const allowed=role==='admin' ? ['admin'] : ['home','travel','resources','locker'];
+    if(allowed.includes(id)) page(id);
+  }
+};
 
 async function loadGroups(){try{const groups=await api('/api/groups');const q=$('search').value.toLowerCase();const rows=groups.filter(g=>!q||g.locality.toLowerCase().includes(q));$('groups').innerHTML=rows.length?rows.map(g=>`<article class="group"><span>📍 ${g.locality}</span><h3>Group from ${g.locality}</h3><p>Driver: <b>${g.driver}</b></p><div class="meta"><div>👥 ${g.seats}/${g.max_passengers} seats</div><div>📍 ${g.meeting_point}</div><div>🕗 ${g.departure_time}</div></div><button class="join" onclick="joinGroup(${g.id})">${g.seats?'Request to Join':'Group Full'}</button></article>`).join(''):'<div class="group"><h3>No groups found</h3><p>Try another locality or create a group.</p></div>'}catch(e){toast(e.message)}}
 async function joinGroup(id){try{const d=await api(`/api/groups/${id}/join`,{method:'POST'});toast(d.message);loadGroups();}catch(e){toast(e.message)}}$('search').oninput=loadGroups;$('refreshGroups').onclick=loadGroups;
@@ -39,4 +53,4 @@ async function loadAdminResources(){if(role!=='admin')return;try{const rows=awai
 $('adminNav').onclick=()=>{if(role==='admin')page('admin')};
 $('adminForm').onsubmit=async e=>{e.preventDefault();try{const d=await api('/api/admin/login',{method:'POST',body:JSON.stringify({adminId:$('adminId').value,password:$('adminPassword').value})});token=d.token;me=d.admin;role='admin';saveSession();$('adminModal').classList.remove('show');openApp();page('admin');toast('Admin login successful.')}catch(e){toast(e.message)}};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).classList.remove('show'));window.onclick=e=>{if(e.target.classList.contains('modal'))e.target.classList.remove('show')};
-if(token&&me){openApp();const start=location.hash.slice(1);if(start&&$(start))page(start);}
+if(token&&me){openApp();}

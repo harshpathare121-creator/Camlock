@@ -13,6 +13,18 @@ CampusLock is a student utility platform with:
 - bcryptjs
 - JWT
 
+## App navigation flow
+
+CampusLock uses an app-style screen flow rather than one long scrolling page:
+
+- Before login: only the Student Registration / Student Login screen is shown.
+- After student login: the authentication screen is hidden completely.
+- The Dashboard opens first.
+- Dashboard, Travel Groups, College Resources, and My Locker are separate app screens; selecting one hides the others.
+- Travel Groups shows the driver's pending join requests and Approve/Reject controls.
+- Logout returns to the login screen.
+- Refreshing while logged in restores the current app screen from the URL hash/session.
+
 ## Run locally
 ```bash
 npm install
