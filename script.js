@@ -1,13 +1,31 @@
 let token=localStorage.getItem('campuslockToken');let me=JSON.parse(localStorage.getItem('campuslockMe')||'null');let role=localStorage.getItem('campuslockRole')||'student';
 const $=id=>document.getElementById(id);const api=async(url,opt={})=>{opt.headers={...(opt.headers||{}),'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})};const r=await fetch(url,opt);const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Something went wrong');return d};
-function toast(m){$('toast').textContent=m;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)}function page(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));$(id).classList.add('on');$('side').classList.remove('open');$('shade').classList.remove('show');if(id==='travel'){loadGroups();loadJoinRequests()}if(id==='resources')loadResources();if(id==='locker')loadLockers();if(id==='admin')loadAdminResources()}
+function toast(m){$('toast').textContent=m;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)}
+function page(id){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
+  const target=$(id);
+  if(!target)return;
+  target.classList.add('on');
+  document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  $('side').classList.remove('open');
+  $('shade').classList.remove('show');
+  window.scrollTo({top:0,behavior:'instant'});
+  history.replaceState(null,'','#'+id);
+  if(id==='travel'){loadGroups();loadJoinRequests()}
+  if(id==='resources')loadResources();
+  if(id==='locker')loadLockers();
+  if(id==='admin')loadAdminResources();
+}
 function showLogin(){ $('registerPanel').hidden=true;$('loginPanel').hidden=false;$('authTitle').textContent='Student Login'}function showRegister(){ $('registerPanel').hidden=false;$('loginPanel').hidden=true;$('authTitle').textContent='Student Registration'}
 $('showLogin').onclick=showLogin;$('showRegister').onclick=showRegister;$('showAdmin').onclick=()=>$('adminModal').classList.add('show');
 $('registerForm').onsubmit=async e=>{e.preventDefault();try{await api('/api/auth/register',{method:'POST',body:JSON.stringify({name:$('regName').value,studentId:$('regId').value,locality:$('regLocality').value,distanceKm:$('regDistance').value,password:$('regPassword').value})});$('loginId').value=$('regId').value;toast('Registration successful. Now login.');e.target.reset();showLogin()}catch(err){toast(err.message)}};
 $('loginForm').onsubmit=async e=>{e.preventDefault();try{const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({studentId:$('loginId').value,password:$('loginPassword').value})});token=d.token;me=d.student;role='student';saveSession();openApp();toast(`Welcome, ${me.name}!`)}catch(err){toast(err.message)}};
 function saveSession(){localStorage.setItem('campuslockToken',token);localStorage.setItem('campuslockMe',JSON.stringify(me));localStorage.setItem('campuslockRole',role)}function clearSession(){token=null;me=null;role='student';localStorage.removeItem('campuslockToken');localStorage.removeItem('campuslockMe');localStorage.removeItem('campuslockRole')}
 function openApp(){$('auth').hidden=true;$('app').hidden=false;$('userName').textContent=me?.name||'College Admin';$('adminNav').hidden=role!=='admin';page('home')}function logout(){clearSession();$('app').hidden=true;$('auth').hidden=false;showLogin();$('loginForm').reset()}$('logout').onclick=logout;
-$('menu').onclick=()=>{$('side').classList.add('open');$('shade').classList.add('show')};$('close').onclick=$('shade').onclick=()=>{$('side').classList.remove('open');$('shade').classList.remove('show')};document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>page(b.dataset.page));document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>page(b.dataset.go));
+$('menu').onclick=()=>{$('side').classList.add('open');$('shade').classList.add('show')};$('close').onclick=$('shade').onclick=()=>{$('side').classList.remove('open');$('shade').classList.remove('show')};document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>page(b.dataset.page));
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>page(b.dataset.go));
+window.onpopstate=()=>{const id=location.hash.slice(1);if(id&&$(id))page(id)};
+
 async function loadGroups(){try{const groups=await api('/api/groups');const q=$('search').value.toLowerCase();const rows=groups.filter(g=>!q||g.locality.toLowerCase().includes(q));$('groups').innerHTML=rows.length?rows.map(g=>`<article class="group"><span>📍 ${g.locality}</span><h3>Group from ${g.locality}</h3><p>Driver: <b>${g.driver}</b></p><div class="meta"><div>👥 ${g.seats}/${g.max_passengers} seats</div><div>📍 ${g.meeting_point}</div><div>🕗 ${g.departure_time}</div></div><button class="join" onclick="joinGroup(${g.id})">${g.seats?'Request to Join':'Group Full'}</button></article>`).join(''):'<div class="group"><h3>No groups found</h3><p>Try another locality or create a group.</p></div>'}catch(e){toast(e.message)}}
 async function joinGroup(id){try{const d=await api(`/api/groups/${id}/join`,{method:'POST'});toast(d.message);loadGroups();}catch(e){toast(e.message)}}$('search').oninput=loadGroups;$('refreshGroups').onclick=loadGroups;
 $('newGroup').onclick=()=>{$('groupModal').classList.add('show')};$('saveGroup').onclick=async()=>{try{await api('/api/groups',{method:'POST',body:JSON.stringify({locality:$('groupLocality').value,meetingPoint:$('meetingPoint').value,departureTime:$('departureTime').value})});$('groupModal').classList.remove('show');$('groupLocality').value='';$('meetingPoint').value='';$('departureTime').value='';toast('Group created. Join requests will appear below.');loadGroups();loadJoinRequests()}catch(e){toast(e.message)}};
@@ -21,4 +39,4 @@ async function loadAdminResources(){if(role!=='admin')return;try{const rows=awai
 $('adminNav').onclick=()=>{if(role==='admin')page('admin')};
 $('adminForm').onsubmit=async e=>{e.preventDefault();try{const d=await api('/api/admin/login',{method:'POST',body:JSON.stringify({adminId:$('adminId').value,password:$('adminPassword').value})});token=d.token;me=d.admin;role='admin';saveSession();$('adminModal').classList.remove('show');openApp();page('admin');toast('Admin login successful.')}catch(e){toast(e.message)}};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).classList.remove('show'));window.onclick=e=>{if(e.target.classList.contains('modal'))e.target.classList.remove('show')};
-if(token&&me)openApp();
+if(token&&me){openApp();const start=location.hash.slice(1);if(start&&$(start))page(start);}
