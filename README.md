@@ -1,26 +1,35 @@
-# CampusLock Full Web App
+# CampusLock — SQLite3 Web App
 
-Root-level Node.js + Express + PostgreSQL project.
+CampusLock is a student utility platform with:
+- Student registration and login
+- Locker booking with distance priority and duration
+- Travel groups with driver approval of join requests
+- College resource requests with admin approval/rejection
 
-## Files
-- `index.html` — UI
-- `style.css` — styling
-- `script.js` — frontend API interaction
-- `server.js` — Express API + PostgreSQL schema setup
-- `package.json` — dependencies/start command
-- `.env.example` — environment variables
+## Stack
+- HTML/CSS/JavaScript
+- Node.js + Express
+- SQLite3
+- bcryptjs
+- JWT
 
 ## Run locally
-1. Create a PostgreSQL database.
-2. Copy `.env.example` to `.env` and fill in `DATABASE_URL` and `JWT_SECRET`.
-3. Run `npm install`.
-4. Run `npm start`.
-5. Open the app at `http://localhost:3000`.
+```bash
+npm install
+npm start
+```
+Then open `http://localhost:3000`.
 
-Default demo admin values are `admin` / `admin123` only if `ADMIN_ID` and `ADMIN_PASSWORD` are not changed. Change them before deployment.
+The SQLite database file `campuslock.db` is created automatically on first startup.
 
-## Main flows
-- Student registration → student login
-- Travel group creation → passenger join request → driver approve/reject
-- College resource request → admin approve/reject → student status
-- Locker priority and booking with required number of days
+## Default admin demo credentials
+- ID: `admin`
+- Password: `admin123`
+
+Set `ADMIN_ID`, `ADMIN_PASSWORD`, and `JWT_SECRET` as environment variables before deployment.
+
+## Render
+SQLite needs persistent storage if you want database records to survive service restarts/redeploys. Without a persistent disk, the SQLite file can be reset when the service filesystem is replaced.
+
+For a Render demo, either accept that limitation or attach a persistent disk and set:
+`SQLITE_DB_PATH=/var/data/campuslock.db`

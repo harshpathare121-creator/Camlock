@@ -1,7 +1,7 @@
 {
   "name": "campuslock",
-  "version": "1.0.0",
-  "description": "CampusLock student utility platform",
+  "version": "1.1.0",
+  "description": "CampusLock student utility platform using SQLite3",
   "main": "server.js",
   "scripts": {"start": "node server.js", "dev": "node server.js"},
   "engines": {"node": ">=18"},
@@ -9,6 +9,6 @@
     "bcryptjs": "^2.4.3",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "pg": "^8.13.1"
+    "sqlite3": "^5.1.7"
   }
 }
